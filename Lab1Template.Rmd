@@ -1,0 +1,127 @@
+---
+title: 'STAT 133 Lab: Introduction to R Expressions'
+author: "Ryan Chui, 24061277"
+output: word_document
+---
+
+Section: S 105 LAB
+GSI: 
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Once you have read the above, you can eliminate it from your Rmd file.
+
+## Introduction
+
+You are to fill in the R code chunks with code that will answer each of the questions.
+As you work on answering the following questions you can run a single code chunk
+by clicking on the "Run" button above, or by holding down the Command key and 
+hitting return.  As you work, you will occassionally want to run all of the code in
+the document to make sure that your document knits properly. 
+ 
+
+For this lab, you will work with the rnorm() function, one of the random number generators in R. 
+The rnorm() function is very handy for generating random values from the normal curve.
+
+1. Use the following information about you to generate some random values:  
+a.  Use set.seed(19930813) to set the seed, where the number in the parentheses 
+is the four-digit year, two-digit month, and two-digit day you were born.
+b.  Set the mean to 17 and the standard deviation to 3.
+d.  Generate either 14 random values.
+e.  Assign the values to the variable called samp1.
+f.	Print the values generated.
+
+```{r}
+set.seed(19930813)
+samp1 = rnorm(14, mean = 17, sd =3)
+samp1
+```
+
+
+2. Create a vector called "normsamps" containing 1000 random samples 
+from a normal distribution with mean 1 and SD 2.  
+
+```{r}
+normsamps <- rnorm(1000, mean = 1, sd = 2)
+```
+
+3. Calculate the mean and sd of the 1000 values in normsamps.
+The mean of the values in normsamps is `r 1 + 3` and the SD is `r  6 - 2`.
+(You are to replace the expressions 1 + 3 and 6 - 2 with the appropriate 
+R expressions to compute these requested information.)
+
+```{r}
+mean(rnorm(1000, mean = 4, sd = 4))
+sd(rnorm(1000, mean = 4, sd = 4))
+```
+
+4. Use implicit coercion of logical to numeric to calculate
+the fraction of the values in normsamps that are less than 3.
+
+```{r}
+as.numeric(normsamps < 3)
+```
+
+
+5. Look up the help for rnorm(). You will see a few other functions listed,
+such as pnorm(), dnorm(), and qnorm().  
+Determine which one of these functions to use to check your answer above.
+That is, find the area under the normal(1, 2) curve to the left of 3.  
+This is the chance of getting a random value less than 3. 
+
+```{r}
+?rnorm
+pnorm(3, mean=1, sd=2)
+```
+
+
+6.  What is the farthest distance from the center of the normal(1, 2)
+curve in your sample, i.e., what is furthest distance from 1? 
+(You may want to use the abs() and max() functions to help determine this.)  
+Assign this distance to the variable called sampMaxDev.
+
+```{r}
+sampMaxDev <- max(normsamps)
+sampMaxDev
+```
+
+
+7. Find the chance of observing a value as far as or farther from 1 as the value in sampMaxDev.
+That is, find the area under the normal(1, 2) curve that is at least sampMax 
+greater than 1 or at least sampMax less than 1. 
+You will want to use one of the functions pnorm, dnorm, and qnorm again.
+
+```{r}
+?rnorm
+2 * pnorm(sampMaxDev, lower.tail=F)
+```
+
+8. Make a histogram of the values in normsamps (use the hist() function).
+Use the argument called main to add a title to your plot and the xlab
+argument to label the x-axis.
+Specify the breaks argument to control the number of bins in the histogram.
+
+```{r}
+hist(normsamps ,main = "Probability distribution", xlab = "Values", breaks = 60)
+```
+
+
+Once you have completed these tasks, make sure that you have included 
+your name at the top of this document and that the document can be knitted.
+Then, upload the Rmd file to bcourses.  
+You have until **midnight Monday night** to upload the file.
