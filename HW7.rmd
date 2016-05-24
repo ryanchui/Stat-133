@@ -1,0 +1,87 @@
+---
+title: "Hw7"
+author: "Ryan Chui"
+output: word_document
+---
+
+```{r}
+library(RMySQL)
+drv = dbDriver("MySQL")
+con = dbConnect(drv, user = "s133", 
+                dbname = "lahman",
+                password = "s133",
+                host = "radagast.berkeley.edu")
+
+# List all of the tables in the database:
+dbListTables(con)
+dbListFields(con, "Salaries")
+
+# query = "SELECT * FROM Salaries;"
+# numRecords = dbGetQuery(con, statement = query)
+# Extract from the Salaries table, aggregate the players salaries into team payrolls. Keep the
+# information as to the team, league, and year, in addition to the payroll. Call these variables,
+# team, league, year, and payroll, respectively.
+query = "SELECT yearID AS year, 
+                teamID AS team, 
+                lgID AS league, 
+                SUM(salary) AS payroll 
+         FROM Salaries
+         GROUP BY teamID, lgID, yearID;"
+SalaryDF = dbGetQuery(con, query)
+
+# query = "SELECT * FROM SeriesPost;"
+# numRecords1 = dbGetQuery(con, statement = query)
+# Modify the SELECT() statement above to include a new variable round, which indicates
+# whether a team won the world series that year. This information is in the SeriesPost
+# table. You will need to join this able with the Salaries table to include this information
+# in the results.          ON Series.yearID = Salaries.yearID #yearID AS year,
+dbListFields(con, "SeriesPost")
+query = "SELECT Salaries.yearID AS year,
+                Salaries.teamID AS team, 
+                Salaries.lgID AS league, 
+                SUM(salary) AS payroll, 
+                Series.teamIDwinner = Salaries.teamID AS round 
+         FROM   Salaries
+         LEFT JOIN SeriesPost AS Series
+         ON Salaries.yearID = Series.yearID 
+         WHERE Series.round = 'WS' OR Salaries.yearID = 1994
+         GROUP BY teamID,lgID, Salaries.yearID;"
+payroll = dbGetQuery(con, query)
+
+head(payroll)
+# Assign the results table to payroll. It will be a data frame in R. Save this data frame in the R binary file called, payroll.rda. Then you can load it into R to create the plot, and not need to pull the data from the database multiple times.
+save(payroll, file = "payroll.rda")
+
+# Adjust the payrolls for inflation and convert the payroll units into millions of dollars. To adjust for inflation, you can use the vector below, which provides the buying power of $1 in 1985, i.e., in 2014, $1 has the same buying power as $0.45 in 1985.
+inflation = c(1, 0.96, 0.95, 0.91, 0.87, 0.84, 0.79, 0.76, 0.74,
+0.72, 0.70, 0.69, 0.66, 0.65, 0.64, 0.63, 0.61, 0.60, 0.58,
+0.57, 0.55, 0.54, 0.52, 0.50, 0.50, 0.49, 0.48, 0.47, 0.46, 0.45)
+names(inflation) = 1985:2014
+
+
+# Create a plot like the plot above. Note that the year values are jittered to avoid overplotting and the grey color is slightly slightly transparent. Consider improving the plot by using different colors for the two leagues.
+# payroll$year = sort(payroll$year)
+inflation1 = c(rep(1,26), rep(0.96, 26), rep(0.95, 26), rep(0.91, 26), rep(0.87, 26), 
+               rep(0.84, 26), rep(0.79, 26), rep(0.76, 26), rep(0.74, 28), rep(0.72, 28),
+               rep(0.70, 28), rep(0.69, 28), rep(0.66, 28), rep(0.65, 30), rep(0.64,30),
+              rep(0.63, 30), rep(0.61, 30), rep(0.60, 30), rep(0.58, 30), rep(0.57,30),
+               rep(0.55, 30), rep(0.54, 30), rep(0.52, 30), rep(0.50, 30), rep(0.50,30),
+              rep(0.49, 30), rep(0.48, 30), rep(0.47, 30), rep(0.46, 30), rep(0.45, 33))
+
+payroll.adjust = inflation1*payroll$payroll
+payroll.adjust = payroll$payroll/1000000
+red = log(payroll.adjust[payroll$round == T])
+teamnames = payroll$team[payroll$round == T]
+years = payroll$year[payroll$round == T]
+tranGray = rgb(190, 190, 190, 150, max = 256)
+
+plot(log(payroll.adjust) ~ jitter(payroll$year, 1), 
+     xlab = "Year",
+     ylab = "Payroll(inflation-adjusted millions)",
+     main = "MLB Payrolls",
+     ylim = c(0,6),
+     col = tranGray)
+points(years, red, col = "red", pch = 19)
+text(years, red, labels = teamnames, cex = 0.5, pos = 3)
+```
+
