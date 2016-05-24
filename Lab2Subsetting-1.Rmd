@@ -1,0 +1,104 @@
+---
+title: "Subsetting"
+output: word_document
+---
+
+In this lab, you will get practice working with subsets of data frames and 
+lists. Please be sure to use the variable names requested so that you 
+get credit for completing the lab. 
+
+Upload the Rmd file to bcourses.
+
+Begin by running the following code chunk to load the objects 
+that you will be working with in this lab assignment.
+These are the data frame *family* and the list called *myList*.
+
+```{r}
+load(url("http://www.stat.berkeley.edu/users/nolan/data/stat133/family.rda"))
+load(url("http://www.stat.berkeley.edu/users/nolan/data/stat133/exampleList.rda"))
+```
+
+### Subsetting the Data Frame *family*
+
+1. Make a new data frame of the males who are over weight.
+Call this data frame *maleOWt*.
+Be sure to keep all of the variables in the orginal data frame.
+Use subsetting by logical to create this data frame.
+
+```{r}
+maleOwt <- family[ (family$overWt == TRUE),]
+```
+
+2. For the new data frame that you created in exercise #1, 
+change the weight to missing for any individual who is named
+Tom. Do not use subsetting by position to do this.
+# fweight[fnames == "Tom"] <- NA
+
+```{r}
+maleOwt[1,5] <- NA
+maleOwt[10,5] <- NA
+```
+
+3. Drop the variable gender from this data frame. Again, use subsetting
+by a logical expression to do this.
+
+```{r}
+maleOwt[,c(T,F,T,T,T,T,T)]
+```
+
+4. Add a new variable to the original data frame *family* and call it
+*lastName*. The values of this variable should all be "Smith" because
+everyone in the data frame is one of the Smith's.
+
+```{r}
+family[,"lastName"] <- "Smith"
+```
+
+5. Create a character vector called *HiLo* which has two elements in
+it, the first called "low" and the second "high".
+Then subset this vector to create a new character vector called   
+*fHiLo*. The length of this vector matches the number of rows in
+*family* and an element has the value "low" when BMI is below 23
+and other wise it has the value "high". (Hint: try creating a logical 
+vector that indicates whether *bmi* is 23 or above or not. How can
+you convert this logical vector into a numeric vector in order 
+to subset *HiLo* by position?)
+
+```{r}
+HiLo <- c("low","high")
+HiLo[fbmi > 23] <- "high"
+HiLo[fbmi < 23] <- "low"
+fHiLo <- HiLo
+```
+
+### Subsetting the List *myList*
+
+6. Find how many elements are in the list  and assign this value to
+the variable *numEl*.
+
+```{r}
+length(myList)
+numEl <- length(myList)
+```
+
+7. Determine what type of object are *df* and *aFunc*.
+
+```{r}
+class(myList$df)
+class(myList$aFunc)
+```
+
+8. Assign the 2nd, 4th, 6th, etc. elements in *chars* to the variable *check*. Try to write your code generally and to not to use the fact that
+you know how many elements are in *chars*.
+
+```{r}
+check <- myList$chars[c(2,4,6,8,10,12)]
+```
+
+9. One of the elements in *myList* is a function. Call this function
+and pass it the variable *x* in the data frame that's also in *myList*.
+Assign the return value from this function call to *xRV*.
+
+```{r}
+xRV <- myList$aFunc(myList$x)
+```
