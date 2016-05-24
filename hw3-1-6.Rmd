@@ -1,0 +1,71 @@
+---
+Name: Ryan Chui
+Class: Stat 133
+title: "Hw3: Plotting in R(Option B)"
+output: html_document
+---
+
+```{r plot1}
+library(XML)
+library(RColorBrewer) 
+
+myColors = brewer.pal(5, "Set2")
+
+flu = readHTMLTable("http://www.cdc.gov/flu/weekly/weeklyarchives2013-2014/data/whoAllregt39.htm", colClasses = "numeric")[[1]]
+names(flu) = c("Wk","A.H1", "A.09H1", "A.H3", "A.NA", "A.NA2", "B", "Tot", "Per")   
+
+nf = layout(matrix(c(1, 1, 1, 1, 2, 1, 1, 1, 1),
+                   nrow = 3, byrow = TRUE),
+            widths = c(0.6,0.5,0.1), 
+            heights = c(0.05,0.6,0.5))
+
+plot(x = flu$Wk, type = "n",      
+     ylim = c(0,5500),
+     xlab = "Week",
+     main = "Influenza Positive Tests Reported to CDC by U.S WHO/NREVSS \n 
+      Collaborating Laborities, National Summary, 2013-14",
+     cex.main = 1.4,
+     ylab = "Number of Positive Specimens",  
+     xaxs= "i",
+     yaxs = "i",
+     axes = FALSE
+     )
+axis(2,at = seq(0, 5500, by = 500), lwd = 1, lwd.ticks = 1, las = 1, cex = 1.6)
+
+Date = c("201340", "201342","201344","201346","201348","201350","201352","201402","201404","201406", "201408","201410",
+         "201412","201414","201416","201418","201420","201422","201424","201426","201428","201430",
+         "201432","201434","201436","201438")
+axis(1, las = 2, at = c(seq(0,52,by = 1)), labels = F) 
+
+text(x = seq(0,50,by = 2), y = -200, labels = Date, pos = 1, 
+     srt = 60, xpd = TRUE, cex = 0.8)
+
+legend("topleft",
+       legend = c("A(Subtyping not performed)", "2009 H1N1", "A(H3)", "B", "Total"),
+       col = myColors, bty = "n", lwd = 4)
+
+flu$week = c(1:52)
+flu$Tot = flu$A.NA2+flu$A.09H1+flu$A.H3+flu$B
+lines(flu$A.NA2~flu$week , col = myColors[1],lwd = 2.5)
+lines(flu$A.09H1~flu$week, col = myColors[2],lwd = 2.5)
+lines(flu$A.H3 ~ flu$week, col = myColors[3],lwd = 2.5)
+lines(flu$B ~ flu$week, col = myColors[4],lwd = 2.5)
+lines(flu$Tot~flu$week, col = myColors[5],lwd = 2.5)
+
+plot(x = flu$Wk, type = "n",      
+     ylim = c(0,35),
+     xaxs= "i",
+     yaxs = "i",
+     xlab = "Week",
+     ylab = "Percent Positive",  
+     cex.lab = 1,
+     axes = FALSE)
+Date2 = c("201340","201344","201348","201352","201404","201408","201412","201416","201420","201424","201428",
+          "201432","201436")
+axis(2, at = seq(0, 35, by = 5), lwd = 1, lwd.ticks = 1, las = 1, cex = 1.2)
+axis(1, las = 2, at =c(seq(0,52,by = 2)), labels = F, cex = 1.6) 
+text(x = seq(0,50,by = 2), y = rep(-2,52), labels = Date2, pos = 1, 
+     srt = 60, xpd = TRUE, cex = 0.5)
+
+lines(flu$Per~flu$week, col = myColors[1],lwd = 2.5)
+```
