@@ -1,0 +1,309 @@
+---
+title: "Exploring the Real Estate Market in Upstate New York"
+output: word_document
+---
+
+In this HW, you will explore data collected for houses sold
+in Saratoga, New York in 2007.  We will explore house prices, size of the
+house, and a few other variables such as the number of bedrooms and
+the number of fireplaces. 
+
+The main goal of this HW is to give you practice working with 
+differnt data types, subsetting, and creating vectors.  A side 
+benefit will be that you will gain practice thinking with data 
+as you carry out your computations. 
+The analysis of the data includes exmaning univariate distributions,
+exploring relationships between variables, and plotting.
+
+-----------
+
+## Reading the Data Into R
+
+Your first task is to read the data into R.
+The data are located on the web at 
+
+http://www.stat.berkeley.edu/users/nolan/data/stat133/Saratoga.txt
+
+- Visit the Web site and exmaine the layout of the data. 
+Do not download it to your computer. 
+
+    * Do the data have a header containing the variable names? Yes
+    * Are the values for an observation separated by a comma, blank, or
+tab? Tab
+
+- Read the documentation for read.csv() and read.table() and examine
+the parameters that are used to specify whether the data have a header
+and how the values in a row are separated. Notice that these functions
+are similar, but they have different default values for these 
+parameters.
+
+- Use read.csv() to read the data from the Web into a data frame 
+called *house*. (Remember to place the URL within quotes and 
+pass it as an argument to the url() function.)
+
+- Use read.table() to read the data from the Web into a data frame
+called *house2*.
+
+- Check that these two data frames are identical. Use the function
+identical() to do this.
+
+```{r}
+house <- read.csv(url("http://www.stat.berkeley.edu/users/nolan/data/stat133/Saratoga.txt"), sep = "")
+house2 <- read.table("http://www.stat.berkeley.edu/users/nolan/data/stat133/Saratoga.txt", header = T)
+identical(house,house2)
+```
+
+-----------------
+
+## Examine Price 
+
+We start by exploring house price. 
+Make summary statistics of price. 
+Remember that you can access a variable within a data frame 
+with the $ sign.
+
+
+```{r}
+summary(house2$Price)
+```
+
+It's a bit surprising to see that the lowest price is only $5,000.
+Also notice that the mean price is about $25,000 more than the median
+price, which indicates that the distribution of price may be skewed
+right, possibly by having a long right tail.
+
+Make histogram of house price. No need to give fancy labels
+at this point; we're just exploring the data.
+Be sure to specify enough bins to see the shape of the data.
+Indeed, we do find that the prices are skewed to the right 
+with relatively few houses priced above $400K. 
+That skewness explains why the mean is higher than the median. 
+The few houses priced between $400K and $800K have pulled it away 
+from the typical price. 
+
+```{r}
+hist(house2$Price, 
+     breaks = 30, 
+     main = "Histogram of House Price",
+     xlab = "Price")
+```
+Does a log transformation make the price distribution more symmetric?
+Now we see those unusually small values cropping up on the left.
+However the rest of the distribution looks symmetric and unimodal.
+
+```{r}
+hist(log(house2$Price),
+     breaks = 30, 
+     main = "Histogram of Log of House Price",
+     xlab = "Log of Price")
+```
+
+Let's use subsetting to dig a little deeper into the ussue of the
+unusually inexpensive houses. We will answer the questions:
+
+- How many are there?  5
+- Do they have unusual values for the other variables? Yes
+
+To answer the first of these questions, create a logical vector
+that indicates if the log of the house price is under 10.5.
+Assign this logical vector to the variable named `cheap'.
+
+```{r}
+cheap <- log(house2$Price) < 10.5
+```
+
+How many houses are what we call cheap?
+
+```{r}
+length(house2$Price[cheap == TRUE])
+```
+
+Use subsetting to print the values of all of the variables 
+for the cheap houses.
+# logical into variable
+
+```{r}
+house[(log(house2$Price) < 10.5)==T,]
+```
+
+These houses do not appear to have unusual values for the other
+variables. 
+
+Use the variable cheap to subset the data frame house
+and remove these rows from the data frame.
+Call the new data frame `house'; that is, replace the existing
+data frame with the new one.
+
+```{r}
+house2[house2$cheap,]
+```
+
+## Explore Living Area
+
+Next we explore the size of the house, i.e., the living area.
+Do you find a similar issue with the living area? 
+Examine the summary statistics for living area and make 
+a histogram of the values for living area and another
+histogra for the logarithm of these values. 
+
+```{r}
+summary(house2$Living.Area)
+hist(house$Living.Area, main = "Histogram of Living Area", xlab = "Living Area")
+hist(log(house$Living.Area), main = "Histogram of Log of Living Area", xlab = "Log of Living Area")
+```
+
+We again find that the distirbution is skewed to the right.
+The log transformation of the values has a less peaked
+distribution that is roughly symmetric, but there appears to
+be an unusually large number of values at about 6.8.
+What value does this correspond to in the original units of measurement?
+
+
+```{r}
+exp(6.8)
+```
+
+-----------
+
+## Transforming Variables into Factors
+
+We next transform the number of bedrooms into a factor vector, i.e., 
+into a categorical variable.  We want to collapse the number of
+bedrooms into four categories, 2 or fewer, 3, 4, and 5 or more.
+
+To do this, follow the following approach:
+
+- Assign the variable *Bedrooms* in *house* to a vector called
+*BR*.
+
+- Use subsetting to set all of the values in *BR* that are greater than
+5 to 5.
+
+- Use the same approach to set all of values in *BR* that are under 2 
+to 2.
+
+- Use the *factor()* function to convert *BR* to a factor vector.
+Read carefully about the levels and labels parameters to the function.
+For the categories, use the following strings: "2- BR", "3 BR", "4 BR",
+and "5+ BR". Assign the factor to *BR*, i.e., over write the 
+numeric *BR* with the factor *BR*. It will be helpful to use the ":"
+function and the *c()* function to create the arguments to the
+function call.
+
+```{r}
+BR <- house$Bedrooms
+BR[house2$Bedrooms > 5] <- 5
+BR[house2$Bedrooms < 2] <- 2
+BR <- factor(BR)
+```
+
+How does a summary of *BR* look different than a summary of *Bedrooms*?
+
+```{r}
+summary(BR)
+summary(house2$Bedrooms)
+```
+
+-----------
+
+## Plotting Price against Lining Area
+
+We will now make a plot of price against living area 
+(both on the log scale)
+and color the plotting symbols according to the number of
+bedrooms in the house.
+We will use the new vector *BR* to determine the color.
+
+Begin by making a vector of 3 colors. Use the colors called
+aquamarine3, darkgoldenrod2, coral2, and mediumorchid3, in that 
+order. Call this vector, *myColors*.
+
+```{r}
+myColors <- c("aquamarine3","darkgoldenrod2","coral2", "mediumorchid3")
+plot(x = log(house2$Living.Area), 
+     y = log(house2$Price), 
+     col = myColors, 
+     main = "Log of price vs log of Living area",
+     xlab = "Log of Living Area",
+     ylab = "Log of Price")
+```
+
+Next make vector of colors that matches the length of *BR*, and
+where a value is "2- BR", the color is aquamarine3, where a value 
+is "3 BR", the color is darkgoldenrod2, etc.  Use subsetting
+by position of the vector *myColors* to do this.
+Call this new vector, *BRcolors*.
+
+```{r}
+myColors[BR == 2] <- 'aquamarine3'
+myColors[BR == 3] <- 'darkgoldenrod2'
+myColors[BR == 4] <- 'coral2'
+myColors[BR == 5] <- "mediumorchid3"
+BRcolors <- myColors
+```
+
+Lastly, we make the scatterplot as follows. Once you have created
+all of the necessary variables, i.e., BR, BRcolors and myColors,
+change the eval=FALSE in the R chunk below to eval=TRUE.
+
+```{r, eval= T}
+plot( Price ~ Living.Area, data = house, log = "xy", main = "", 
+      xlab = "Living Area (log sq ft)", ylab = "Price (log $)",
+      col = BRcolors, pch = 19, cex = 0.4)
+
+legend("bottomright", fill = myColors, legend = levels(BR),
+       title = "# Bedrooms", cex = 0.75)
+```
+
+Don't worry about the various arguments to the function call. 
+We will be learning about them this week.
+
+We see in the plot that price and living area have a roughly linear
+relationship and that houses with more bedrooms tend to command
+a higher price. This makes sense. 
+It may be surprising the number of bedrooms is not more 
+highly correlated with price and size of the house.
+-----------
+
+### Number of Fireplaces
+
+The original variable *Fireplaces* is the actual number of fireplaces
+in the house. 
+Follow the approach in the previous section to create a new variable
+called *FP* that is a factor with just two levels: 
+"None","At least 1". 
+
+
+```{r}
+FP <- factor(c("None", "At least 1"))
+```
+
+Create a new variable that contains the price per square foot of 
+the house.
+Make a plot of price per square foot against price (determine
+if they should be on the log scale)
+and color the plotting symbols according to whether or not there
+is a fireplace in the house. To do this, create a vector of colors 
+called FPcolors.
+
+```{r}
+p <- (house2$Price)/(house2$Living.Area)
+FPcolors <- house$Fireplaces == T
+plot(p ~ house2$Price, data = house, log = "xy", main = "", xlab = "Price per sq foot", ylab = "Price", col = FPcolors, pch = 19, cex = 0.4)
+legend("bottomright", fill = FPcolors, legend = levels(FP),
+title = "number of fireplaces", cex = 0.75)
+```
+plot(p ~ house2$Price, data = house, log = "xy", main = "", xlab = "Price per sq foot", ylab = "Price",  pch = 19, cex = 0.4)
+legend("bottomright", legend = levels(FP),
+title = "number of fireplaces", cex = 0.75)
+
+Are houses with fireplaces generally more expensive than houses without?
+What is the relationship between price per square foot and price?
+Can you explain why you might have this shape of relationship?
+No. As you can the plot below, more samples are drawn and some data shows the an increase in price/sq foot yields an increase in price. The price per square foot and price is directionally proportional. This shape of relationship explains if a house is more spacious, the more of the house owner has to pay.
+
+```{r}
+plot(p ~ house2$Price, data = house, log = "xy", main = "", xlab = "Price per sq foot", ylab = "Price",  pch = 19, cex = 0.4)
+legend("bottomright", legend = levels(FP),
+title = "number of houses", cex = 0.75)
+```
