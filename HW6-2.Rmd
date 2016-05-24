@@ -1,0 +1,64 @@
+---
+title: "Hw6"
+date: "April 11, 2015"
+output: html_document
+---
+
+```{r}
+library(XML)
+er = xmlParse("http://www.stat.berkeley.edu/~nolan/data/factbook/factbook.xml")
+
+erRoot = xmlRoot(er)
+xmlSize(erRoot)
+names(erRoot)
+
+#Extract a vector of infant mortality rates and a vector of corresponding country codes from
+#the factbook. Convert the rates to numeric and bind the two vectors into a data frame.
+infant_node = xpathSApply(erRoot, '//field[@name = "Infant mortality rate"]/rank', xmlGetAttr, "number")
+infant_node1 = xpathSApply(erRoot, '//field[@name = "Infant mortality rate"]/rank', xmlGetAttr, "country")
+infant_DF = data.frame(infant_node,infant_node1)
+names(infant_DF) = c("Infant Mortality", "country")
+
+#Repeat the previous step for population and two other variables of interest to you and that
+#you think might make a good plot.
+life_exp_node = xpathSApply(erRoot, '//field[@name = "Life expectancy at birth"]/rank', xmlGetAttr, "number")
+life_ex_node1 = xpathSApply(erRoot, '//field[@name = "Life expectancy at birth"]/rank', xmlGetAttr, "country")
+life_expDF = data.frame(life_exp_node,life_ex_node1)
+names(life_expDF) = c("Life Expectancy", "country")
+
+ed_node = xpathSApply(erRoot, '//field[@name = "Education expenditures"]/rank', xmlGetAttr, "number")
+ed_node1 = xpathSApply(erRoot, '//field[@name = "Education expenditures"]/rank', xmlGetAttr, "country")
+ed_expDF = data.frame(ed_node,ed_node1)
+names(ed_expDF) = c("Education Expenditures", "country")
+
+obs_node = xpathSApply(erRoot, '//field[@name="Obesity - adult prevalence rate"]/rank', xmlGetAttr, "number")
+obs_node1 = xpathSApply(erRoot, '//field[@name="Obesity - adult prevalence rate"]/rank', xmlGetAttr, "country")
+obs_DF = data.frame(obs_node,obs_node1 )
+names(obs_DF) = c("Obesity - adult prevalence rate", "country")
+
+#Use the merge() function to merge the 4 data frames into one data frame. Be sure to read
+#about the by, by.x, by.y, all, all.x, and all.y parameters to merge to figure out how best to
+#combine the data frames.
+DF = merge(infant_DF, life_expDF, by = "country")
+DF = merge(DF, ed_expDF, by = "country" )
+DF = merge(DF, obs_DF, by = "country" )
+
+#plot
+library(plot3D)
+library(RColorBrewer)
+
+# save plotting parameters
+pm <- par("mfrow")
+
+scatter3D(x = as.numeric(DF[,2]),
+          y = as.numeric(DF[,3]),
+          z = as.numeric(DF[,4]), 
+          pch = 16, cex = 0.5, 
+          col = c("blue","orange","purple"),
+          main = "Life Expectancy at Birth vs. Infant Mortality Rate vs Population By GDP",
+          xlab = "Infant Mortality",
+          ylab = "Life Expectancy", 
+          zlab = "Population",
+          ticktype = "detailed")
+```
+
