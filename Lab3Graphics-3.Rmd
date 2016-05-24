@@ -1,0 +1,216 @@
+---
+Name: Ryan Chui
+Class: Stat 133
+title: "Introduction to Plotting in R"
+output: word_document
+---
+
+This plotting exercise introduces many of the features in the R graphics functions. 
+There are many more features to investigate.
+Documentation can be found by calling plot.default()
+and also by asking for help with the par function, i.e. ?par
+In addition, you might want to visit some of the R visualization
+web sites to learn more about making beautiful plots.
+These include:
+
+- http://rdataviz.wordpress.com/
+- http://gallery.r-enthusiasts.com/
+- http://www.stat.auckland.ac.nz/~paul/RGraphics/rgraphics.html
+- http://blog.revolutionanalytics.com/2009/01/10-tips-for-making-your-r-graphics-look-their-best.html
+
+### Reading the Data into R
+
+We begin by loading in our data and determining the size and shape and names 
+of the variables in the data frame:
+
+```{r}
+chips = 
+  read.table("http://www.stat.berkeley.edu/users/nolan/data/chip04.txt", 
+             header = TRUE)
+
+names(chips)
+dim(chips)
+head(chips)
+```
+
+### A First Attempt to Plot
+
+We want to look at how *Transistors* has changed over the years.
+Rather than plot points, we make a line plot that connects the points.
+
+```{r}
+plot(x = chips$Date, y = chips$Transistors, type = "l")
+```
+
+Make the following changes to the plot:
+
+* Use the formula language to express the relationship that you wanted plotted
+* Make the line thicker
+* Plot the number of transistors on a log scale
+
+Put your modified code below.
+
+```{r}
+plot(log(chips$Transistors)~log(chips$Date), type = "l", lwd = 3)
+```
+
+### Adding Context to the Plot
+
+We next add axes labels and a title to the plot
+We store the labels in variables to make it easier if we need to make the plot again.
+
+```{r}
+titleP = "Intel Microprocessor"
+ylabel = "ADD YOUR LABEL"
+xlabel = "Year"
+```
+
+
+### Transforming the Data
+
+We transform the data so that we examine relative growth
+This way, we can add multiple line graphs to the same canvas
+because they will be unitless. Create two other transformed 
+variables for clockspeed and mips. Call these *cspd* and *mps*
+and add them to the new data frame *chipsT*.
+
+```{r}
+cspd = chips$ClockSpeed
+mps = chips$MIPS
+trans = chips$Transistors/chips$Transistors[1]
+chipsT = data.frame(date = chips$Date,
+                    trans = chips$Transistors/chips$Transistors[1], 
+                    cspd, mps
+                    )
+```
+
+Before we make our plot we want to make sure that the scale on the y-axis
+will be large enough to accomodate the biggest change.
+We find this with
+
+```{r}
+maxChange = max(sapply(chipsT[ -1], max))
+```
+
+### The Painter's Model
+
+Start by making an empty plot and specify the limits of the 
+y axis. Also plot the y-axis on log scale. Be sure to include
+the labels and title that you created earlier.
+
+```{r plot1}
+plot( trans ~ date, data = chipsT, 
+      type = "n", log = "y",
+      xlab = xlabel, ylab = ylabel, main = titleP,
+      ylim = c(0.5, maxChange) )
+```
+
+Use the lines() function to add three lines to the plot, one for
+each measure of the chip, i.e., trans, cspd, and mps.
+
+```{r plot2}
+lines(trans ~ chips$Date, col="red",lwd=2.5))
+lines(cspd ~ chips$Date, col="blue",lwd=2.5)
+lines(mps ~ chips$Date, col="black",lwd=2.5)
+```
+
+### Color
+
+To distibguish between the lines, we will use color.
+Let's choose colors from one of Cindy Brewer's palettes.
+To do this, follow the steps below.
+
+* Install the RColorBrewer package. This only needs to be done once, and
+do not put this code in the Rmd file.
+
+* Load the package into your workspace with  library(RColorBrewer) 
+
+* To see all of the colors available call the function 
+*display.brewer.all()*
+Call this function from the console. Do not put this call in your Rmd
+file. You probably want to zoom the image so that you can see the palettes and colors better
+ 
+* Choose a palette and colors within the palette to use. Since we are
+using colors to distinguish between variable, we should choose colors 
+from a qualitative/categorical palette. 
+ 
+* Now to get the color vector to use. 
+Suppose the palette has n colors, and you want the n1st, n2nd, and n3rd of them. 
+Then you can call the brewer.pal as follows:
+ 
+```{r}
+library(RColorBrewer)
+myColors = brewer.pal( 3, "Set2")
+```
+
+Replace the n, n1, n2, n3, and "name..." in the code above 
+with the information that you want and remove the comment #. 
+Then, remake the lines using your colors
+
+```{r plot3}
+lines(trans ~ chips$Date, col = myColors[1],lwd = 2.5)
+lines(cspd ~ chips$Date, col= myColors[2],lwd = 2.5)
+lines(mps ~ chips$Date, col= myColors[3],lwd = 2.5)
+```
+
+
+Now that your plot has colors, 
+add a legend to the plot with the legend() function.
+Update the call to legend() below to have more informative
+labels and to use the colors you chose from one of Brewer's palettes.
+
+```{r plot4}
+legend("topleft", 1976, 10000, 
+       legend = c("TRANS", "CSPD", "MPS"), 
+       fill = myColors, bty = "n")
+```
+
+
+### Reference Lines 
+
+Lastly, add  reference lines and text to the plot.
+Specifically, use abline to add a vertical line at 1985 and at 1993.
+This is when the first 32 bit processor and the Pentium processor
+were introduced, respectively.
+Also add text next to the lines to indicate
+the processor that was released at that date.
+
+With abline(), we can specify a vertical line with the v parameter,  
+a horizontal line with the h parameter, or a line with any slope 
+and intercept with the a and b paramters. Add two vertical lines,
+one at 1983 and the other at 1985. Make them both grey and thick enough
+to easily see.
+
+```{r plot5}
+abline(v = 1993, col = 'grey', lwd = 2.5)
+abline(v = 1985, col = 'grey', lwd = 2.5)
+  
+```
+
+Next, place text next to each line to indicate the event that
+they correspond to. We can use the text() function to do this.
+The text() function places text in the plotting region.
+With text, you specify the x,y location of the text.
+
+Instead, we use mtext() to place text in the margin of the plot.
+We will need to specify fie parameters to the function call: 
+text, side, line, at, and adj. Read the help for mtext to figure out
+what these parameters do.
+For the text parameter, provide a short meaningful label for the 
+each vertical line.
+Use the side parameter to place the text at the top of the plot.
+(Recall that 1 is bottom, 2 is left, 3 is top, and 4 is the right side.)
+The line parameter indicates which line of the margin to use.
+This can be negative to plot within the plotting region, and it 
+need not be an integer. For example, try -1.2.
+The at parameter will specify the x position to place the text.
+Lastly with adj you can specify where you want the text to be placed 
+relative to the at position provided.
+
+```{r}
+par(oma=c(1, 1, 1, 1), mfrow=c(2, 2))
+ mtext(outer=T, "The title for this page of plots", side = -1.2, line = 1, adj=0)
+```
+
+
+You should have a beautiful plot at this point. Congratulations!
