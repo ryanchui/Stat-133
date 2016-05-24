@@ -1,0 +1,122 @@
+---
+title: "HW8"
+author: "Ryan Chui"
+date: "April 19, 2015"
+output: html_document
+---
+  
+This is a big data set, so please don't do the *load()* step repeatedly.
+It will overwhelm our servers!
+
+```{r plot1}
+load(url("http://www.stat.berkeley.edu/users/nolan/data/EmailsDist.rda"))
+
+set.seed(1234)
+idx1 = sample(which(isSpam), 20)
+idx2 = sample(which(!isSpam), 20)
+idx = sample(c(idx1, idx2))
+distSmall = distEmails[ idx, idx]
+iS = isSpam
+
+n = nrow(distSmall)
+set.seed(12341)
+permRows = sample(n)
+permRows
+
+v = 5
+folds = matrix(permRows, byrow = TRUE, nrow = v)
+folds[1, ]
+
+dd = distSmall[ folds[1,], folds[ -1,]]
+
+votes = function(ordering, spamVec, k) {
+  # The inputs:
+  # ordering: vector of indices, sorting emails by distance
+  # spamVec: logical indicating true status of each email
+  # k: number of neighbors to use in voting
+  # reorder the spam vector by ordering:
+  spamOrdered = spamVec[ordering]
+  # calculate how many are spam in the first k: 
+  yesVotes = sum(spamVec[ordering[1:k]]) 
+  # divide by k to get the proportion of yes votes
+  return(yesVotes/k)
+}
+
+predNeighbor = function(distMat, spamVec, k) {
+  # Create a matrix of indices to rearrange column emails
+  # from nearest to farthest:
+  ordering = t(apply(distMat, 1, FUN = order))
+  # Fill in the apply statement to return the votes for
+  # each of the e-mails in the rows
+  return(apply(ordering, 1, FUN = votes, spamVec, k))
+}
+
+vs = vector("numeric", length = n)
+
+for (i in 1:v) {
+  vs[folds[i, ]] = 
+    predNeighbor(k = 7, 
+                 distSmall[ folds[ i, ], 
+                            folds[ -i, ]], 
+                 iS[folds[-i, ]]) 
+}
+
+
+cvKnn = function(distances, isSpam, k, vfold = 5) {
+  n = nrow(distances)
+  permRows = sample(n)
+  if(n%%vfold > 0){
+    permRows = permRows[1:(length(permRows)- n%%vfold)]
+  } else{
+    permRows = sample(n)
+  }
+  folds = matrix(permRows, byrow = TRUE, nrow = vfold) 
+  
+  vs = matrix(0, nrow = n, ncol = length(k))
+  for (j in 1:length(k)){
+    for (i in 1:vfold){
+      vs[folds[i, ], j] = predNeighbor(k = k[j], 
+      distMat = distances[folds[ i, ], 
+                         folds[ -i, ]], 
+      isSpam[folds[ -i, ]])
+    }
+  }
+  return(vs) 
+}
+
+cvknnMat = cvKnn(distances = distEmails, isSpam = isSpam, k = 1:20, vfold = 10)
+
+# Write a function called plotErrorRates to see how well the prediction is, you can compare it to the truth as follows. The input for this function is the return value from the call to cvKnn and a cutoff, e.g. cutoff = 0.6. This function computes the error rates as follows. For a set of emails, if you have the truth for them in the logical vector spamT ruth, and you have the prediction for them in the numeric vector spamP red, then use the cut-off, say 0.6, where if spamP red exceeds 0.6 then the prediction is spam.
+plotErrorRates = function(cvKnnMat, cutoff){
+  spamTruth = isSpam
+  spamPred = cvKnnMat[, 1:ncol(cvKnnMat)] > cutoff
+  assess = table(spamPred[, 1], spamTruth)
+  errs1 = assess[2, 1] / sum(assess[ , 1])
+  errs2 = assess[1, 2] / sum(assess[, 2])
+  for(i in 1:ncol(cvKnnMat)){
+    assess = table(spamPred[, i], spamTruth)
+  errs1[i] = assess[2, 1] / sum(assess[ , 1])
+  errs2[i] = assess[1, 2] / sum(assess[, 2])
+  }
+  plot(errs1, col = "blue",
+       ylab = "Error Rate", 
+       xlab = "k Values", 
+       main = "Error Rates Plot with different values of k", 
+       xlim = c(0, 20),
+       ylim = c(0, 0.4),
+       type = "l",
+       cex.main = 1.5)
+  lines(errs2, type = "l", col = "orange")
+  legend("topright", 
+         legend = c("Error I", "Error II"), 
+         fill = c("blue", "orange"), 
+         inset = 0.1,
+         bty = "n")
+}
+
+plotErrorRates(cvknnMat, 0.6)
+
+# Include as a comment on the shape of the curve and your choice of k.
+
+#Error I fluctuates between 0 and 0.05, while Error II fluctuates between 0.2 and 0.4. With smaller k values, Error I has higher fluctuations but as k values increases there is less fluctuation. This is also true for Error II, with bigger changes of error rates in low k values and smaller changes of error rates in high k values. Error II shows higher fluctuations overall in absolute value terms. The range of the k values is between 1 and 20. The result can tie to the idea that Type I error is more serious than Type II error
+```
